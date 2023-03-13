@@ -6,8 +6,10 @@ DB_POSTGRES_USER?=social-network-user
 DB_POSTGRES_PASS?=social-network-password
 
 install:
+	go mod tidy
 	go install github.com/rakyll/statik@latest
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
+	go install github.com/pressly/goose/v3/cmd/goose@latest
 
 generate:
 	cp ./api/swagger.json ./swaggerui/swagger.json
@@ -34,8 +36,6 @@ migration:
 				user=$(DB_POSTGRES_USER) \
 				password=$(DB_POSTGRES_PASS) \
 				sslmode=disable" up
-
-prepare-environment: start-postgres migrations
 
 run:
 	go run cmd/social_network_server/main.go

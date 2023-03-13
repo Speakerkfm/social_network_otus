@@ -661,8 +661,8 @@
           "first_name",
           "second_name",
           "age",
+          "sex",
           "biography",
-          "birthdate",
           "city"
         ],
         "properties": {
@@ -684,8 +684,9 @@
             "description": "Возраст",
             "example": 18
           },
-          "birthdate": {
-            "$ref": "#/components/schemas/BirthDate"
+          "sex": {
+            "type": "string",
+            "example": "male"
           },
           "biography": {
             "type": "string",

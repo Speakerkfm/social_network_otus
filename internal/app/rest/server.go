@@ -121,7 +121,7 @@ func (i *Implementation) GetUserGetId(c *gin.Context, id UserId) {
 	c.JSON(http.StatusOK, User{
 		Age:        socialUser.Age,
 		Biography:  socialUser.Biography,
-		Birthdate:  BirthDate{},
+		Sex:        socialUser.Sex,
 		City:       socialUser.City,
 		FirstName:  socialUser.FirstName,
 		Id:         socialUser.ID,
