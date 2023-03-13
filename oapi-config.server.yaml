@@ -1,0 +1,8 @@
+package: rest
+generate:
+  gin-server: true
+  models: true
+  embedded-spec: true
+output: ./internal/app/rest/server.gen.go
+output-options:
+  skip-prune: true
