@@ -150,10 +150,27 @@ func (i *Implementation) PostUserRegister(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, RegisterResponse{UserId: userID})
-
 }
 
 // GetUserSearch (GET /user/search)
 func (i *Implementation) GetUserSearch(c *gin.Context, params GetUserSearchParams) {
-	_ = c.AbortWithError(http.StatusInternalServerError, errors.New("implement me"))
+	socialUsers, err := i.svc.UserSearch(c.Copy(), params.FirstName, params.LastName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, N5xx{Code: http.StatusInternalServerError, Message: err.Error()})
+		return
+	}
+	res := make([]User, 0, len(socialUsers))
+	for _, socialUser := range socialUsers {
+		res = append(res, User{
+			Age:        socialUser.Age,
+			Biography:  socialUser.Biography,
+			Sex:        socialUser.Sex,
+			City:       socialUser.City,
+			FirstName:  socialUser.FirstName,
+			Id:         socialUser.ID,
+			SecondName: socialUser.SecondName,
+		})
+	}
+
+	c.JSON(http.StatusOK, res)
 }

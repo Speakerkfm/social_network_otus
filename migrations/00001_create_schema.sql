@@ -2,7 +2,7 @@
 -- SQL in this section is executed when the migration is applied.
 CREATE TABLE social_user
 (
-    id              text primary key,
+    id              UUID primary key,
     first_name      text                    NOT NULL,
     second_name     text                    NOT NULL,
     age             integer                 NOT NULL,
@@ -16,8 +16,8 @@ CREATE TABLE social_user
 
 CREATE TABLE user_session
 (
-    id         text primary key,
-    user_id    text                    NOT NULL,
+    id         UUID primary key,
+    user_id    UUID                    NOT NULL,
     token      text                    NOT NULL,
     created_at timestamp default now() not null,
     updated_at timestamp default now() not null

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -108,4 +109,37 @@ func (i *Implementation) CreateSession(ctx context.Context, ses UserSession) err
 		return err
 	}
 	return nil
+}
+
+func (i *Implementation) UserSearch(ctx context.Context, firstName, secondName string) ([]SocialUser, error) {
+	query, args, err := sq.Select(allSocialUserFields...).
+		From(tableSocialUser).
+		Where(sq.And{
+			sq.Like{fieldFirstName: firstName + "%"},
+			sq.Like{fieldSecondName: secondName + "%"},
+		}).
+		OrderBy(fieldID).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]SocialUser, 0)
+	rows, err := i.db.QueryContext(ctx, query, args...)
+	for rows.Next() {
+		item := SocialUser{}
+		if err = rows.Scan(
+			&item.ID,
+			&item.FirstName,
+			&item.SecondName,
+			&item.Age,
+			&item.Sex,
+			&item.City,
+			&item.Biography,
+			&item.HashedPassword); err != nil {
+			log.Printf("fail to scan user: %s", err.Error())
+			continue
+		}
+		res = append(res, item)
+	}
+	return res, nil
 }

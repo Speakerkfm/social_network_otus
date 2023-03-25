@@ -55,6 +55,27 @@ func (a *Adapter) CreateSession(ctx context.Context, ses domain.UserSession) err
 	})
 }
 
+func (a *Adapter) UserSearch(ctx context.Context, firstName, secondName string) ([]domain.SocialUser, error) {
+	users, err := a.repo.UserSearch(ctx, firstName, secondName)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]domain.SocialUser, 0, len(users))
+	for _, usr := range users {
+		res = append(res, domain.SocialUser{
+			ID:             usr.ID,
+			FirstName:      usr.FirstName,
+			SecondName:     usr.SecondName,
+			Age:            usr.Age,
+			Sex:            convertSexFromPg(usr.Sex),
+			City:           usr.City,
+			Biography:      usr.Biography,
+			HashedPassword: usr.HashedPassword,
+		})
+	}
+	return res, nil
+}
+
 func convertSexToPg(sex string) int {
 	switch sex {
 	case "male":

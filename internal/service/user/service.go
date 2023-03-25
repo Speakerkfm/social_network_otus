@@ -14,12 +14,14 @@ type Repository interface {
 	CreateUser(ctx context.Context, usr domain.SocialUser) error
 	GetUserByID(ctx context.Context, id string) (domain.SocialUser, error)
 	CreateSession(ctx context.Context, ses domain.UserSession) error
+	UserSearch(ctx context.Context, firstName, secondName string) ([]domain.SocialUser, error)
 }
 
 type Service interface {
 	Login(ctx context.Context, id, password string) (string, error)
 	Register(ctx context.Context, req domain.RegisterUserRequest) (string, error)
 	GetUserByID(ctx context.Context, id string) (domain.SocialUser, error)
+	UserSearch(ctx context.Context, firstName, secondName string) ([]domain.SocialUser, error)
 }
 
 type Implementation struct {
@@ -70,6 +72,10 @@ func (i *Implementation) Register(ctx context.Context, req domain.RegisterUserRe
 
 func (i *Implementation) GetUserByID(ctx context.Context, id string) (domain.SocialUser, error) {
 	return i.repo.GetUserByID(ctx, id)
+}
+
+func (i *Implementation) UserSearch(ctx context.Context, firstName, secondName string) ([]domain.SocialUser, error) {
+	return i.repo.UserSearch(ctx, firstName, secondName)
 }
 
 func generateID() string {
