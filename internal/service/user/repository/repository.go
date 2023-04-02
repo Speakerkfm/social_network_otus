@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"log"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/bxcodec/dbresolver/v2"
 )
 
 const (
@@ -42,10 +42,10 @@ var allUserSessionFields = []string{
 }
 
 type Implementation struct {
-	db *sql.DB
+	db dbresolver.DB
 }
 
-func New(db *sql.DB) *Implementation {
+func New(db dbresolver.DB) *Implementation {
 	return &Implementation{
 		db: db,
 	}
