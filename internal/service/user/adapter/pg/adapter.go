@@ -47,14 +47,6 @@ func (a *Adapter) GetUserByID(ctx context.Context, id string) (domain.SocialUser
 	}, nil
 }
 
-func (a *Adapter) CreateSession(ctx context.Context, ses domain.UserSession) error {
-	return a.repo.CreateSession(ctx, repository.UserSession{
-		ID:     ses.ID,
-		UserID: ses.UserID,
-		Token:  ses.Token,
-	})
-}
-
 func (a *Adapter) UserSearch(ctx context.Context, firstName, secondName string) ([]domain.SocialUser, error) {
 	users, err := a.repo.UserSearch(ctx, firstName, secondName)
 	if err != nil {

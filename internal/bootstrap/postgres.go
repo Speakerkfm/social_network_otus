@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	sql "database/sql"
+	"database/sql"
 	"fmt"
 
 	"github.com/bxcodec/dbresolver/v2"
@@ -11,11 +11,11 @@ import (
 func CreatePostgres() (dbresolver.DB, error) {
 	// TODO конфиг когда-нибудь...
 	hostMaster := "localhost"
-	portMaster := 15432
+	portMaster := 5432
 	hostSyncReplica := "localhost"
 	portSyncReplica := 5432
 	hostAsyncReplica := "localhost"
-	portAsyncReplica := 25432
+	portAsyncReplica := 5432
 	user := "social-network-user"
 	password := "social-network-password"
 	dbname := "social_network_otus"

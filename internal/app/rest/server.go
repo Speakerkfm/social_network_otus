@@ -3,18 +3,27 @@ package rest
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
+
+	"github.com/Speakerkfm/social_network_otus/internal/service/auth"
+	"github.com/Speakerkfm/social_network_otus/internal/service/post"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 
 	"github.com/Speakerkfm/social_network_otus/internal/service/user"
 	"github.com/Speakerkfm/social_network_otus/internal/service/user/domain"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 )
 
-func New(svc user.Service) (*http.Server, error) {
+func New(userSvc user.Service, authSvc auth.Service, postSvc post.Service) (*http.Server, error) {
 	engine := gin.Default()
 
-	engine.Use(cors.Default())
+	corsCfg := cors.DefaultConfig()
+	corsCfg.AllowAllOrigins = true
+	corsCfg.AllowHeaders = []string{"*"}
+	engine.Use(cors.New(corsCfg))
 
 	swagger, err := GetSwagger()
 	if err != nil {
@@ -29,7 +38,9 @@ func New(svc user.Service) (*http.Server, error) {
 	// OpenAPI schema.
 
 	RegisterHandlers(engine, &Implementation{
-		svc: svc,
+		userSvc: userSvc,
+		authSvc: authSvc,
+		postSvc: postSvc,
 	})
 
 	return &http.Server{
@@ -39,7 +50,9 @@ func New(svc user.Service) (*http.Server, error) {
 }
 
 type Implementation struct {
-	svc user.Service
+	userSvc user.Service
+	authSvc auth.Service
+	postSvc post.Service
 }
 
 // GetDialogUserIdList (GET /dialog/{user_id}/list)
@@ -69,7 +82,7 @@ func (i *Implementation) PostLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, N5xx{Code: http.StatusInternalServerError, Message: err.Error()})
 		return
 	}
-	token, err := i.svc.Login(c.Copy(), req.Id, req.Password)
+	token, err := i.userSvc.Login(c.Copy(), req.Id, req.Password)
 	if err != nil {
 		// TODO error handler
 		if errors.Is(err, domain.ErrUnauthenticated) {
@@ -95,14 +108,26 @@ func (i *Implementation) PutPostDeleteId(c *gin.Context, id PostId) {
 
 // GetPostFeed (GET /post/feed)
 func (i *Implementation) GetPostFeed(c *gin.Context, params GetPostFeedParams) {
-	_ = c.AbortWithError(http.StatusInternalServerError, errors.New("implement me"))
-
+	ctx := c.Copy()
+	token := strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
+	userSession, err := i.authSvc.GetSession(ctx, token)
+	if err != nil {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+	log.Printf("%+v", userSession)
+	posts, err := i.postSvc.Feed(ctx, userSession.UserID, 0, 0)
+	if err != nil {
+		log.Printf("postSvc.Feed: %s", err.Error())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, posts)
 }
 
 // GetPostGetId (GET /post/get/{id})
 func (i *Implementation) GetPostGetId(c *gin.Context, id PostId) {
 	_ = c.AbortWithError(http.StatusInternalServerError, errors.New("implement me"))
-
 }
 
 // PutPostUpdate (PUT /post/update)
@@ -113,7 +138,7 @@ func (i *Implementation) PutPostUpdate(c *gin.Context) {
 
 // GetUserGetId (GET /user/get/{id})
 func (i *Implementation) GetUserGetId(c *gin.Context, id UserId) {
-	socialUser, err := i.svc.GetUserByID(c.Copy(), id)
+	socialUser, err := i.userSvc.GetUserByID(c.Copy(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, N5xx{Code: http.StatusInternalServerError, Message: err.Error()})
 		return
@@ -136,7 +161,7 @@ func (i *Implementation) PostUserRegister(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, N5xx{Code: http.StatusInternalServerError, Message: err.Error()})
 		return
 	}
-	userID, err := i.svc.Register(c.Copy(), domain.RegisterUserRequest{
+	userID, err := i.userSvc.Register(c.Copy(), domain.RegisterUserRequest{
 		FirstName:  req.FirstName,
 		SecondName: req.SecondName,
 		Age:        req.Age,
@@ -154,7 +179,7 @@ func (i *Implementation) PostUserRegister(c *gin.Context) {
 
 // GetUserSearch (GET /user/search)
 func (i *Implementation) GetUserSearch(c *gin.Context, params GetUserSearchParams) {
-	socialUsers, err := i.svc.UserSearch(c.Copy(), params.FirstName, params.LastName)
+	socialUsers, err := i.userSvc.UserSearch(c.Copy(), params.FirstName, params.LastName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, N5xx{Code: http.StatusInternalServerError, Message: err.Error()})
 		return

@@ -10,9 +10,3 @@ type SocialUser struct {
 	Biography      string
 	HashedPassword string
 }
-
-type UserSession struct {
-	ID     string
-	UserID string
-	Token  string
-}

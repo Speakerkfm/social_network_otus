@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"github.com/Speakerkfm/social_network_otus/internal/service/auth"
 
 	"github.com/Speakerkfm/social_network_otus/internal/service/user/domain"
 	uuid "github.com/satori/go.uuid"
@@ -13,7 +14,6 @@ import (
 type Repository interface {
 	CreateUser(ctx context.Context, usr domain.SocialUser) error
 	GetUserByID(ctx context.Context, id string) (domain.SocialUser, error)
-	CreateSession(ctx context.Context, ses domain.UserSession) error
 	UserSearch(ctx context.Context, firstName, secondName string) ([]domain.SocialUser, error)
 }
 
@@ -25,12 +25,14 @@ type Service interface {
 }
 
 type Implementation struct {
-	repo Repository
+	repo    Repository
+	authSvc auth.Service
 }
 
-func New(repo Repository) *Implementation {
+func New(repo Repository, authSvc auth.Service) *Implementation {
 	return &Implementation{
-		repo: repo,
+		repo:    repo,
+		authSvc: authSvc,
 	}
 }
 
@@ -42,12 +44,8 @@ func (i *Implementation) Login(ctx context.Context, id, password string) (string
 	if usr.HashedPassword != hashPassword(password) {
 		return "", domain.ErrUnauthenticated
 	}
-	token := generateToken()
-	if err = i.repo.CreateSession(ctx, domain.UserSession{
-		ID:     generateID(),
-		UserID: usr.ID,
-		Token:  token,
-	}); err != nil {
+	token, err := i.authSvc.CreateSession(ctx, usr.ID)
+	if err != nil {
 		return "", fmt.Errorf("fail to create session")
 	}
 	return token, err
@@ -79,10 +77,6 @@ func (i *Implementation) UserSearch(ctx context.Context, firstName, secondName s
 }
 
 func generateID() string {
-	return uuid.NewV4().String()
-}
-
-func generateToken() string {
 	return uuid.NewV4().String()
 }
 

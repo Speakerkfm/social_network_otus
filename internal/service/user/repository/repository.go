@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	tableSocialUser  = "social_user"
-	tableUserSession = "user_session"
+	tableSocialUser = "social_user"
 
 	fieldID             = "id"
 	fieldFirstName      = "first_name"
@@ -20,8 +19,6 @@ const (
 	fieldCity           = "city"
 	fieldBiography      = "biography"
 	fieldHashedPassword = "hashed_password"
-	fieldToken          = "token"
-	fieldUserID         = "user_id"
 )
 
 var allSocialUserFields = []string{
@@ -33,12 +30,6 @@ var allSocialUserFields = []string{
 	fieldCity,
 	fieldBiography,
 	fieldHashedPassword,
-}
-
-var allUserSessionFields = []string{
-	fieldID,
-	fieldUserID,
-	fieldToken,
 }
 
 type Implementation struct {
@@ -95,22 +86,6 @@ func (i *Implementation) GetUserByID(ctx context.Context, id string) (SocialUser
 	return res, nil
 }
 
-func (i *Implementation) CreateSession(ctx context.Context, ses UserSession) error {
-	query, args, err := sq.Insert(tableUserSession).
-		Columns(allUserSessionFields...).
-		Values(ses.ID,
-			ses.UserID,
-			ses.Token).
-		PlaceholderFormat(sq.Dollar).ToSql()
-	if err != nil {
-		return err
-	}
-	if _, err = i.db.ExecContext(ctx, query, args...); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (i *Implementation) UserSearch(ctx context.Context, firstName, secondName string) ([]SocialUser, error) {
 	query, args, err := sq.Select(allSocialUserFields...).
 		From(tableSocialUser).
@@ -123,8 +98,12 @@ func (i *Implementation) UserSearch(ctx context.Context, firstName, secondName s
 	if err != nil {
 		return nil, err
 	}
-	res := make([]SocialUser, 0)
 	rows, err := i.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]SocialUser, 0)
+	defer rows.Close()
 	for rows.Next() {
 		item := SocialUser{}
 		if err = rows.Scan(

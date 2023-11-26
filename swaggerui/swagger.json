@@ -478,12 +478,12 @@
           {
             "name": "offset",
             "in": "query",
-            "required": false,
+            "required": true,
             "style": "form",
             "explode": true,
             "schema": {
               "minimum": 0,
-              "type": "number",
+              "type": "integer",
               "description": "Оффсет с которого начинать выдачу",
               "example": 100,
               "default": 0
@@ -492,12 +492,12 @@
           {
             "name": "limit",
             "in": "query",
-            "required": false,
+            "required": true,
             "style": "form",
             "explode": true,
             "schema": {
               "minimum": 1,
-              "type": "number",
+              "type": "integer",
               "description": "Лимит, ограничивающий кол-во возвращенных сущностей",
               "example": 10,
               "default": 10
@@ -735,6 +735,11 @@
         }
       },
       "Post": {
+        "required": [
+          "id",
+          "text",
+          "author_user_id"
+        ],
         "type": "object",
         "properties": {
           "id": {
